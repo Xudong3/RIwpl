@@ -860,10 +860,15 @@ apply(J_WPL, 2, mean)
 apply(Jis_WPL, 2, mean)
 
 
-#install.packages("xtable")
+#generate table 
 library("xtable")
 xtable(list(apply(Fit_NML, 2 , mean), apply(Fit_NML, 2 , sd))   , type="latex")
 
+kernel <- "uni"
+models <- c(1, 2, 3)
+heteroskedasticity <- c(F, T)
+
+rnames <- paste(c("m1", "h.m1", "m2", "h.m2","m3", "h.m3"), kernel, sep = ".")
 
 #boxplot for uninformative sampling (NML, PL and WPL)
 color=c( rep(c("green", "blue", "red", "yellow"), 4))
