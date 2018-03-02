@@ -854,12 +854,12 @@ apply(Jis_WPL, 2, mean)
 
 
 #boxplot for uninformative sampling (NML, PL and WPL)
-color=c( rep(c("green", "blue", "red", "yellow","purple", "orange"), 6))
+color=c( rep(c("green", "blue", "red", "yellow","purple", "orange"), 4))
 name=c("alpha_NML", "beta_NML", "sigma^2_NML", "tau^2_NML", "alpha_PL", "beta_PL", "sigma^2_PL", "tau^2_PL", "alpha_WPL", "beta_WPL", "sigma^2_WPL", "tau^2_WPL" )
-boxplot(cbind(Fit_NML[,c(1:6)],Fit_PL[,c(1:6)], Fit_WPL[,c(1:6)]) ,   col=color)
+boxplot(cbind(Fit_NML[,c(1:4)],Fit_PL[,c(1:4)], Fit_WPL[,c(1:4)]) ,   col=color)
 abline(h=0)
 
 #boxplot for informative sampling (NML,PL and WPL)
-boxplot(cbind(Fitis_NML[,c(1:6)],Fitis_PL[,c(1:6)], Fitis_WPL[,c(1:6)]) ,   col=color)
+boxplot(cbind(Fitis_NML[,c(1:4)],Fitis_PL[,c(1:4)], Fitis_WPL[,c(1:4)]) ,   col=color)
 abline(h=0)
 
