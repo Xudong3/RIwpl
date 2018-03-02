@@ -854,7 +854,7 @@ apply(Jis_WPL, 2, mean)
 
 
 #boxplot for uninformative sampling (NML, PL and WPL)
-color=c( rep(c("green", "blue", "red", "yellow","purple", "orange"), 4))
+color=c( rep(c("green", "blue", "red", "yellow"), 4))
 name=c("alpha_NML", "beta_NML", "sigma^2_NML", "tau^2_NML", "alpha_PL", "beta_PL", "sigma^2_PL", "tau^2_PL", "alpha_WPL", "beta_WPL", "sigma^2_WPL", "tau^2_WPL" )
 boxplot(cbind(Fit_NML[,c(1:4)],Fit_PL[,c(1:4)], Fit_WPL[,c(1:4)]) ,   col=color)
 abline(h=0)
