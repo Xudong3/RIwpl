@@ -860,7 +860,7 @@ apply(J_WPL, 2, mean)
 apply(Jis_WPL, 2, mean)
 
 
-install.packages("xtable")
+#install.packages("xtable")
 library("xtable")
 xtable(list(apply(Fit_NML, 2 , mean), apply(Fit_NML, 2 , sd))   , type="latex")
 
