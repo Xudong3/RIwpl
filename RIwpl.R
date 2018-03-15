@@ -1,8 +1,8 @@
 
 
 #setting: notation
-N1=30 ## number of strata 
-N2=30 ##number of elements in each strata (population level)
+N1=100 ## number of strata 
+N2=100 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
@@ -645,14 +645,11 @@ PSis_WPL<-matrix(0,nrow=LOTS,ncol=4)
 
 ##Estimation: NML, PL and WPL 
 for(i in 1:LOTS){
-
    cat(i)
    population$u<-rnorm(T,s=sqrt(truetau2))[population$cluster]
    population$x<-rnorm(N1*N2)+rnorm(T)[population$cluster]
    population$y<-with(population, truebeta1+truebeta2*x+u+rnorm(N1*N2,s=sqrt(truesigma2)))
    population$r=with(population, x*(y-truebeta1-truebeta2*x))
-   
-   
    
    #uninformative sampling design
    s<-strata(data=population, stratanames="strata", size=rep(n2,N1),
@@ -724,7 +721,9 @@ for(i in 1:LOTS){
                        sc=StrSRSWORSample$strata, n2infor=rep(n2, N1), N2, theta=rb[[1]] )
    
    #sanwich estimator (uninformative sampling )
-   G_PL[, ,i] = solve(H_PL[,,i])%*% J_PL[, , i]%*% t(solve(H_PL[,,i])) 
+   G_PL[, ,i] =  tryCatch( solve(H_PL[,,i])%*% J_PL[, , i]%*% t(solve(H_PL[,,i])),
+      error=function(e) matrix(NaN, 6,6)
+   )
    
    #Pairwise score function PL (uninformative sampling)
    PS_PL[i, ]<- pairscore_PL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
@@ -751,7 +750,10 @@ for(i in 1:LOTS){
                       sc=StrSRSWORSampleis$strata, n2infor=n2is, N2, theta=rbis[[1]] )
    
    #sanwich estimator (informative sampling )
-   Gis_PL[, ,i] = solve(His_PL[,,i])%*% Jis_PL[, , i]%*% t(solve(His_PL[,,i]))
+   Gis_PL[, ,i] = tryCatch(
+      solve(His_PL[, , i])%*% Jis_PL[, , i]%*% t(solve(His_PL[, , i])) ,
+      error=function(e) matrix(NaN, 6,6)
+   )
    
    #Pairwise score function PL (informative sampling)
    PSis_PL[i, ]<- pairscore_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
@@ -778,7 +780,10 @@ for(i in 1:LOTS){
           n2infor=rep(n2, N1), N2, theta=rc[[1]] )
    
    #sanwich estimator (uninformative sampling )
-   G_WPL[, ,i] = solve(H_WPL[,,i])%*% J_WPL[, , i]%*% t(solve(H_WPL[,,i]))
+   G_WPL[, ,i] = tryCatch(
+      solve(H_WPL[, , i])%*% J_WPL[, , i]%*% t(solve(H_WPL[, , i])) ,
+      error=function(e) matrix(NaN, 4,4)
+   )
   
    #Pairwise score function WPL (uninformative sampling)
    PS_WPL[i, ]<- pairscore_WPL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
@@ -808,7 +813,11 @@ for(i in 1:LOTS){
             n2infor=n2is, N2,  theta=rcis[[1]] )
 
    #sanwich estimator for WPL (informative sampling )
-   Gis_WPL[,,i]= solve(His_WPL[, , i])%*% Jis_WPL[, , i]%*% t(solve(His_WPL[, , i])) 
+   Gis_WPL[,,i]= tryCatch(
+      solve(His_WPL[, , i])%*% Jis_WPL[, , i]%*% t(solve(His_WPL[, , i])) ,
+      error=function(e) matrix(NaN, 4,4)
+   )
+      
    
    #Pairwise score function WPL (informative sampling)
    PSis_WPL[i, ]<- pairscore_WPL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
