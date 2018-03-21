@@ -829,37 +829,37 @@ for(i in 1:LOTS){
 
 
 
-apply(Fit_NML, 2 , mean)
-apply(Fit_PL, 2, mean)
-apply(Fit_WPL, 2, mean)
-apply(Fit_NML, 2, sd)
-apply(Fit_PL, 2, sd)
-apply(Fit_WPL, 2, sd)
+round(apply(Fit_NML, 2 , mean),2 )
+round(apply(Fit_PL, 2, mean),2)
+round(apply(Fit_WPL, 2, mean),2)
+round(apply(Fit_NML, 2, sd),2)
+round(apply(Fit_PL, 2, sd),2)
+round(apply(Fit_WPL, 2, sd),2)
 
-apply(Fitis_NML, 2 , mean)
-apply(Fitis_PL, 2, mean)
-apply(Fitis_WPL, 2, mean)
-apply(Fitis_NML, 2, sd)
-apply(Fitis_PL, 2, sd)
-apply(Fitis_WPL, 2, sd)
+round(apply(Fitis_NML, 2 , mean),2)
+round(apply(Fitis_PL, 2, mean),2)
+round(apply(Fitis_WPL, 2, mean),2)
+round(apply(Fitis_NML, 2, sd),2)
+round(apply(Fitis_PL, 2, sd),2)
+round(apply(Fitis_WPL, 2, sd),2)
 
-apply(G_PL, 1:2, mean)
-apply(Gis_PL, 1:2, mean)
+round(apply(G_PL, 1:2, mean),2)
+round(apply(Gis_PL, 1:2, mean),2)
 
-apply(G_WPL, 1:2, mean)
-apply(Gis_WPL, 1:2, mean)
+round(apply(G_WPL, 1:2, mean),2)
+round(apply(Gis_WPL, 1:2, mean),2)
 
-apply(PS_PL, 2, mean)
-apply(PSis_PL, 2, mean)
+round(apply(PS_PL, 2, mean),2)
+round(apply(PSis_PL, 2, mean), 2)
 
-apply(PS_WPL, 2, mean)
-apply(PSis_WPL, 2, mean)
+round(apply(PS_WPL, 2, mean),2) 
+round(apply(PSis_WPL, 2, mean),2)
 
-apply(J_PL, 2, mean)
-apply(Jis_PL, 2, mean)
+round(apply(J_PL, 2, mean), 2) 
+round(apply(Jis_PL, 2, mean), 2) 
 
-apply(J_WPL, 2, mean)
-apply(Jis_WPL, 2, mean)
+round(apply(J_WPL, 2, mean), 2)
+round(apply(Jis_WPL, 2, mean), 2) 
 
 
 #boxplot for uninformative sampling (NML, PL and WPL)
@@ -872,3 +872,16 @@ abline(h=0)
 boxplot(cbind(Fitis_NML[,c(1:4)],Fitis_PL[,c(1:4)], Fitis_WPL[,c(1:4)]) ,   col=color)
 abline(h=0)
 
+?matrix
+#create a table with values
+table_fit<-matrix(c(apply(Fit_NML, 2,  mean), apply(Fit_PL, 2, mean), apply(Fit_WPL, 2, mean)),  ncol=4, byrow=TRUE )
+table_fit<-round(table_fit, 2)
+colnames(table_fit)<-c("biased in beta_0", "biased in beta_1", "biased in sigma2", "biased in tau2")
+rownames(table_fit)<-c("NML", "PL", "WPL")
+table_NML<-as.table(table_fit)
+
+#create a table for latex
+#install.packages("xtable")
+library(xtable)
+print(xtable(table_fit))
+  
