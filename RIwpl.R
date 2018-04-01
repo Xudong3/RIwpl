@@ -1,8 +1,8 @@
 
 
 #setting: notation
-N1=100 ## number of strata 
-N2=100 ##number of elements in each strata (population level)
+N1=20 ## number of strata 
+N2=20 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
@@ -438,7 +438,7 @@ estJ_PL=fast_J_PL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,x=StrSRSWORSampl
 sanestimator_PL= solve(estH_PL)%*% estJ_PL%*% solve(t(estH_PL))
 
 
-
+library("numDeriv")
 #Informative
 #Calculate Hessian matrix H for PL (bread for informative sampling design)
 plis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x){
@@ -829,59 +829,86 @@ for(i in 1:LOTS){
 
 
 
-round(apply(Fit_NML, 2 , mean),2 )
-round(apply(Fit_PL, 2, mean),2)
-round(apply(Fit_WPL, 2, mean),2)
-round(apply(Fit_NML, 2, sd),2)
-round(apply(Fit_PL, 2, sd),2)
-round(apply(Fit_WPL, 2, sd),2)
-
-round(apply(Fitis_NML, 2 , mean),2)
-round(apply(Fitis_PL, 2, mean),2)
-round(apply(Fitis_WPL, 2, mean),2)
-round(apply(Fitis_NML, 2, sd),2)
-round(apply(Fitis_PL, 2, sd),2)
-round(apply(Fitis_WPL, 2, sd),2)
-
-round(apply(G_PL, 1:2, mean),2)
-round(apply(Gis_PL, 1:2, mean),2)
-
-round(apply(G_WPL, 1:2, mean),2)
-round(apply(Gis_WPL, 1:2, mean),2)
-
-round(apply(PS_PL, 2, mean),2)
-round(apply(PSis_PL, 2, mean), 2)
-
-round(apply(PS_WPL, 2, mean),2) 
-round(apply(PSis_WPL, 2, mean),2)
-
-round(apply(J_PL, 2, mean), 2) 
-round(apply(Jis_PL, 2, mean), 2) 
-
-round(apply(J_WPL, 2, mean), 2)
-round(apply(Jis_WPL, 2, mean), 2) 
-
-
-#boxplot for uninformative sampling (NML, PL and WPL)
-color=c( rep(c("green", "blue", "red", "yellow"), 4))
-name=c("alpha_NML", "beta_NML", "sigma^2_NML", "tau^2_NML", "alpha_PL", "beta_PL", "sigma^2_PL", "tau^2_PL", "alpha_WPL", "beta_WPL", "sigma^2_WPL", "tau^2_WPL" )
-boxplot(cbind(Fit_NML[,c(1:4)],Fit_PL[,c(1:4)], Fit_WPL[,c(1:4)]) ,   col=color)
-abline(h=0)
-
-#boxplot for informative sampling (NML,PL and WPL)
-boxplot(cbind(Fitis_NML[,c(1:4)],Fitis_PL[,c(1:4)], Fitis_WPL[,c(1:4)]) ,   col=color)
-abline(h=0)
-
-?matrix
-#create a table with values
-table_fit<-matrix(c(apply(Fit_NML, 2,  mean), apply(Fit_PL, 2, mean), apply(Fit_WPL, 2, mean)),  ncol=4, byrow=TRUE )
-table_fit<-round(table_fit, 2)
-colnames(table_fit)<-c("biased in beta_0", "biased in beta_1", "biased in sigma2", "biased in tau2")
-rownames(table_fit)<-c("NML", "PL", "WPL")
-table_NML<-as.table(table_fit)
-
 #create a table for latex
 #install.packages("xtable")
 library(xtable)
-print(xtable(table_fit))
+
+#bias and sd for uninformative sampling (NML, PL, WPL)
+df<- matrix(round(c(apply(Fit_NML, 2,  mean),apply(Fit_NML, 2, sd) , apply(Fit_PL, 2, mean),apply(Fit_PL, 2, sd), apply(Fit_WPL, 2, mean),apply(Fit_WPL, 2, sd)),2),
+            ncol=6 )
+df<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), df)
+colnames(df)<-c("", rep(c("bias", "sd"), 3))
+df           
+df_header <- construct_header(
+   # the data.frame or matrix that should be plotted  
+   df,
+   # the labels of the groups that we want to insert
+   grp_names = c("uninformtive", "NML", "PL", "WPL"), 
+   # the number of columns each group spans
+   span = c(1, 2, 2, 2), 
+   # the alignment of each group, can be a single character (lcr) or a vector
+   align = "c"
+)           
+print(xtable(df), add.to.row = df_header, include.rownames = F, hline.after = F)      
+
+
+
+
+#variance estimator for uninformative sampling (PL, WPL)          
+vardf<-matrix(round(c(diag(apply(G_PL, 1:2,  mean)),diag(apply(J_PL, 1:2, mean)) , apply(PS_PL, 2, mean),
+                      apply(PS_PL, 2, sd), diag(apply(G_WPL, 1:2,  mean)),diag(apply(J_WPL, 1:2, mean)) , apply(PS_WPL, 2, mean),
+                      apply(PS_WPL, 2, sd)),2), ncol=8 )
+vardf<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), vardf)
+colnames(vardf)<-c("parameter", rep(c("G", "J", "mean of PS", "sd of PS"), 2))
+vardf       
+vardf_header <- construct_header(
+   # the data.frame or matrix that should be plotted  
+   vardf,
+   # the labels of the groups that we want to insert
+   grp_names = c("",  "PL", "WPL"), 
+   # the number of columns each group spans
+   span = c(1, 4, 4), 
+   # the alignment of each group, can be a single character (lcr) or a vector
+   align = "c"
+)           
+print(xtable(vardf), add.to.row = vardf_header, include.rownames = F, hline.after = F)  
+
+
+#bias and sd for informative sampling (NML, PL, WPL)
+dfis<- matrix(round(c(apply(Fitis_NML, 2,  mean),apply(Fitis_NML, 2, sd) , apply(Fitis_PL, 2, mean),apply(Fitis_PL, 2, sd), apply(Fitis_WPL, 2, mean),apply(Fitis_WPL, 2, sd)),2),
+              ncol=6 )
+dfis<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), dfis)
+colnames(dfis)<-c("parameter", rep(c("bias", "sd"), 3))
+dfis           
+dfis_header <- construct_header(
+   # the data.frame or matrix that should be plotted  
+   dfis,
+   # the labels of the groups that we want to insert
+   grp_names = c("", "NML", "PL", "WPL"), 
+   # the number of columns each group spans
+   span = c(1, 2, 2, 2), 
+   # the alignment of each group, can be a single character (lcr) or a vector
+   align = "c"
+)           
+print(xtable(dfis), add.to.row = dfis_header, include.rownames = F, hline.after = F)  
+
+#variance estimator for informative sampling (PL, WPL)          
+vardfis<-matrix(round(c(diag(apply(Gis_PL, 1:2,  mean)),diag(apply(Jis_PL, 1:2, mean)) , apply(PSis_PL, 2, mean),
+                        apply(PSis_PL, 2, sd), diag(apply(Gis_WPL, 1:2,  mean)),diag(apply(Jis_WPL, 1:2, mean)) , apply(PSis_WPL, 2, mean),
+                        apply(PSis_WPL, 2, sd)),2), ncol=8 )
+vardfis<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), vardfis)
+colnames(vardfis)<-c("parameter", rep(c("G", "J", "mean of PS", "sd of PS"), 2))
+vardfis   
+vardfis_header <- construct_header(
+   # the data.frame or matrix that should be plotted  
+   vardfis,
+   # the labels of the groups that we want to insert
+   grp_names = c("",  "PL", "WPL"), 
+   # the number of columns each group spans
+   span = c(1, 3, 3), 
+   # the alignment of each group, can be a single character (lcr) or a vector
+   align = "c"
+)           
+print(xtable(vardfis), add.to.row = vardfis_header, include.rownames = F, hline.after = F)  
+
   
