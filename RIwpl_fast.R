@@ -1,4 +1,5 @@
 
+
 #setting: notation
 N1=100 ## number of strata 
 N2=100 ##number of elements in each strata (population level)
