@@ -1,8 +1,8 @@
 
 
 #setting: notation
-N1=30 ## number of strata 
-N2=50 ##number of elements in each strata (population level)
+N1=100 ## number of strata 
+N2=100 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
