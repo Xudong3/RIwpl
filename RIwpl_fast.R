@@ -1,8 +1,8 @@
 
 
 #setting: notation
-N1=100 ## number of strata 
-N2=100 ##number of elements in each strata (population level)
+N1=30 ## number of strata 
+N2=50 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
@@ -875,7 +875,7 @@ construct_header <- function(df, grp_names, span, align = "c", draw_line = T) {
 }
 
 
-install.packages("expm")
+#install.packages("expm")
 library("expm") #use sqrtm function
 
 #define the squre root of J
@@ -999,7 +999,61 @@ vardfis_header <- construct_header(
 )           
 print(xtable(vardfis), add.to.row = vardfis_header, include.rownames = F, hline.after = F)  
 
-
+xtable.decimal <- function(x, 
+                           cols=which(lapply(x, class) == 'numeric'), 
+                           colAlignment, 
+                           tocharFun=prettyNum,
+                           ...) {
+   splitCol <- function(x, ...) {
+      s <- strsplit(tocharFun(x, ...), split='.', fixed=TRUE)
+      right <- sapply(s, FUN=function(x) { ifelse(length(x) == 2, x[2], '0') })
+      left <- sapply(s, FUN=function(x) { x[1] })
+      data.frame(left=left, right=right, stringsAsFactors=FALSE)
+   }
+   
+   cols <- cols[order(cols, decreasing=TRUE)]
+   colnames <- names(x)
+   for(i in cols) {
+      if(i == 1) {
+         tmp <- cbind(splitCol(x[,1], ...), x[,2:ncol(x)])
+         names(tmp)[1:2] <- paste(names(tmp)[1], c('left','right'), sep='.')
+         names(tmp)[3:ncol(x)] <- names(x)[2:ncol(x)]
+         x <- tmp
+      } else if(i == ncol(x)) {
+         tmp <- cbind(x[,1:(ncol(x)-1)], splitCol(x[,ncol(x)], ...))
+         names(tmp)[1:(ncol(tmp)-2)] <- names(x)[1:(ncol(x)-1)]
+         names(tmp)[(ncol(tmp)-1):ncol(tmp)] <- paste(names(x)[ncol(x)], 
+                                                      c('left','right'), sep='.')
+         x <- tmp
+      } else {
+         tmp <- cbind(x[,1:(i-1)], splitCol(x[,i], ...), x[,(i+1):ncol(x)])
+         names(tmp)[1:(i-1)] <- names(x)[1:(i-1)]
+         names(tmp)[i:(i+1)] <- paste(names(x)[i], c('left','right'), sep='.')
+         names(tmp)[(i+2):ncol(tmp)] <- names(x)[(i+1):ncol(x)]
+         x <- tmp
+      }
+   }
+   
+   colnames[cols] <- paste('\\multicolumn{2}{c}{', colnames[cols], '}', sep='')
+   colnames <- paste(colnames, collapse=' & ')
+   
+   addtorow <- list()
+   addtorow$pos <- list()
+   addtorow$pos[[1]] <- c(0)
+   addtorow$command <- paste( colnames, ' \\\\ ', sep='')
+   
+   align <- rep('l', ncol(x))
+   if(!missing(colAlignment)) {
+      for(i in seq_along(colAlignment)) {
+         align[names(x) == names(colAlignment)[i]] <- colAlignment[i]
+      }
+   }
+   align[grep('.left$', names(x), perl=TRUE)] <- 'r@{.}'
+   align <- c('l', align) #Add an alignment for row names
+   
+   xtab <- xtable(x, align=align, ...)
+   print(xtab, add.to.row=addtorow, include.rownames=FALSE, include.colnames=FALSE, ...)
+}
 
 
 
