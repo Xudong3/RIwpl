@@ -1,19 +1,18 @@
 
-
 #setting: notation
-N1=100 ## number of strata 
-N2=100 ##number of elements in each strata (population level)
+N1=1000 ## number of strata 
+N2=1000 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
 
 population$strata<-population$long
-overlap=ceiling(N2*3/5)
+overlap=ceiling(N2*4/5)
 
 model_cluster<-function(population, overlap){
    population$cluster<-numeric(nrow(population))
    
-   id<-ifelse(population$lat<=overlap, 
+   id<-ifelse(population$latx<=overlap,
               population$long, 
               ((population$long+population$lat-overlap) %% N1)+1
    )
@@ -30,8 +29,8 @@ table(table(population$cluster))
 table(table(population$strata))
 
 #Model: parameter from random intercept model
-truebeta1=1
-truebeta2=3
+truebeta1=3
+truebeta2=1
 truesigma2=5
 truetau2=1.5
 truevalue<-c(truebeta1,truebeta2, truesigma2, truetau2)
@@ -50,13 +49,13 @@ n2=ceiling(N2/10) ##number of elements in each strata (sample level)
 
 #information stratify sampling design (SRSWOR)
 ##Informative means the number of elments in each stata (sample level) depends on the model variable y,x.
-param=c(0.05, 3.5)
+param=c(0.5, 1.5)
 n2informative= function(y,x,r, sc, param, N2){
    a=rep(NA, length=length(unique(population$strata)))
    b=rep(NA, length=length(unique(population$strata)))
    for (i in 1: length(unique(sc))){
       a[i]=mean(r[sc==i])
-      b[i]=2*ceiling((param[1]*exp(-param[2]*a[i]))/(1 +param[1]*exp(-param[2]*a[i]))*N2/2)
+      b[i]=ceiling((param[1]*exp(-param[2]*a[i]))/(1 +param[1]*exp(-param[2]*a[i]))*N2)
    }
    b
 }
@@ -79,6 +78,12 @@ sis<-strata(data=population, stratanames="strata", size=n2is,
 StrSRSWORSampleis=getdata(population, sis)
 
 
+#check
+summary(population$y)
+summary(StrSRSWORSample$y)
+summary(StrSRSWORSampleis$y)
+
+truevalue
 # Estimation: full-likelihood
 #install.packages("lme4")
 library(lme4)
@@ -846,6 +851,7 @@ abline(h=0)
 #install.packages("xtable")
 library(xtable)
 
+
 construct_header <- function(df, grp_names, span, align = "c", draw_line = T) {
     if (length(align) == 1) align <- rep(align, length(grp_names))
     if (!all.equal(length(grp_names), length(span), length(align)))
@@ -875,61 +881,61 @@ construct_header <- function(df, grp_names, span, align = "c", draw_line = T) {
 }
 
 
-#install.packages("expm")
-library("expm") #use sqrtm function
 
 #define the squre root of J
-sqrtJ_PL<-array(0, c(4,4, LOTS))
+sqrt_diagJ_PL=matrix(0, nrow=LOTS, ncol=4)
 for ( i in 1:LOTS){
-   sqrtJ_PL[,,i]=sqrtm(J_PL[, , i])
+    sqrt_diagJ_PL[i,]= sqrt(diag(J_PL[,,i]))
 }
 
-sqrtJis_PL<-array(0, c(4,4, LOTS))
+sqrt_diagJis_PL=matrix(0, nrow=LOTS, ncol=4)
 for ( i in 1:LOTS){
-   sqrtJis_PL[,,i]=sqrtm(Jis_PL[, , i])
+    sqrt_diagJis_PL[i,]= sqrt(diag(Jis_PL[,,i]))
 }
 
-sqrtJ_WPL<-array(0, c(4,4, LOTS))
+sqrt_diagJ_WPL=matrix(0, nrow=LOTS, ncol=4)
 for ( i in 1:LOTS){
-   sqrtJ_WPL[,,i]=sqrtm(J_WPL[, , i])
+    sqrt_diagJ_WPL[i,]= sqrt(diag(J_WPL[,,i]))
 }
 
-sqrtJis_WPL<-array(0, c(4,4, LOTS))
+sqrt_diagJis_WPL=matrix(0, nrow=LOTS, ncol=4)
 for ( i in 1:LOTS){
-   sqrtJis_WPL[,,i]=sqrtm(Jis_WPL[, , i])
+    sqrt_diagJis_WPL[i,]= sqrt(diag(Jis_WPL[,,i]))
 }
 
 #define the squre root of G
-sqrtG_PL<-array(0, c(4,4, LOTS))
+sqrt_diagG_PL=matrix(0, nrow=LOTS, ncol=4)
 for ( i in 1:LOTS){
-   sqrtG_PL[,,i]=sqrtm(G_PL[, , i])
+    sqrt_diagG_PL[i,]= sqrt(diag(G_PL[,,i]))
 }
 
-sqrtGis_PL<-array(0, c(4,4, LOTS))
+sqrt_diagGis_PL=matrix(0, nrow=LOTS, ncol=4)
 for ( i in 1:LOTS){
-   sqrtGis_PL[,,i]=sqrtm(Gis_PL[, , i])
+    sqrt_diagGis_PL[i,]= sqrt(diag(Gis_PL[,,i]))
 }
 
-sqrtG_WPL<-array(0, c(4,4, LOTS))
+sqrt_diagG_WPL=matrix(0, nrow=LOTS, ncol=4)
 for ( i in 1:LOTS){
-   sqrtG_WPL[,,i]=sqrtm(G_WPL[, , i])
+    sqrt_diagG_WPL[i,]= sqrt(diag(G_WPL[,,i]))
 }
 
-sqrtGis_WPL<-array(0, c(4,4, LOTS))
+sqrt_diagGis_WPL=matrix(0, nrow=LOTS, ncol=4)
 for ( i in 1:LOTS){
-   sqrtGis_WPL[,,i]=sqrtm(Gis_WPL[, , i])
+    sqrt_diagGis_PL[i,]= sqrt(diag(Gis_WPL[,,i]))
 }
-
 
 
 
 #bias,  sd (empirical standard deviation)  and estimated sd (G) for uninformative sampling (NML, PL, WPL)
 df<- matrix(c(apply(Fit_NML, 2,  mean), apply(Fit_NML, 2, sd), apply(Fit_PL, 2, mean), apply(Fit_PL, 2, sd),
-                    diag(apply(sqrtG_PL, 1:2,  mean)),  apply(Fit_WPL, 2, mean), apply(Fit_WPL, 2, sd),
-                  diag(apply(sqrtG_WPL, 1:2,  mean))),ncol=8)
-df<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), df)
-colnames(df)<-c("",c("bias", "sd"), rep(c("bias", "sd","G^(-\frac{1}{2})"), 2))
-df    
+apply(sqrt_diagG_PL, 2, mean),  apply(Fit_WPL, 2, mean), apply(Fit_WPL, 2, sd),
+apply(sqrt_diagG_WPL, 2, mean)),ncol=8)
+df[, c(1,3, 5, 6, 8)]=df[, c(1, 3, 5, 6, 8 )]*100
+df<-round(df, 2)
+df<-cbind(c("beta_0", "beta_1", "sigma^2", "tau^2"), df)
+colnames(df)<-c("",c("bias*100", "sd"), rep(c("bias*100", "sd","esd*100"), 2))
+df
+
 df_header <- construct_header(
    # the data.frame or matrix that should be plotted  
    df,
@@ -940,15 +946,18 @@ df_header <- construct_header(
    # the alignment of each group, can be a single character (lcr) or a vector
    align = "c"
 )           
-print(xtable(df), add.to.row = df_header, include.rownames = F, hline.after = F)      
+print(xtable(df), add.to.row = df_header, include.rownames = F,  hline.after = F, latex.environments=NULL,booktabs=TRUE)
+
 
 
 #variance estimator (sd of PS and  J) for uninformative sampling (PL, WPL)          
-vardf<-matrix(c( apply(PS_PL, 2, mean),apply(PS_PL, 2, sd),diag(apply(sqrtJ_PL, 1:2, mean)) ,
-                    apply(PS_WPL, 2, mean),apply(PS_WPL, 2, sd), diag(apply(sqrtJ_WPL, 1:2, mean))),ncol=6)
-vardf<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), vardf)
-colnames(vardf)<-c("parameter", rep(c("mean of PS", "sd of PS", "J^{\frac{1}{2}}"), 2))
-vardf       
+vardf<- matrix(c( apply(PS_PL, 2, mean),apply(PS_PL, 2, sd),  apply(sqrt_diagJ_PL, 2, mean) ,
+apply(PS_WPL, 2, mean),apply(PS_WPL, 2, sd),  apply(sqrt_diagJ_WPL, 2, mean)),ncol=6)
+vardf<-round(vardf,2)
+vardf<-cbind(c("beta_0", "beta_1", "sigma^2", "tau^2"), vardf)
+colnames(vardf)<-c("parameter", rep(c("mean of PS", "sd of PS", "esd of PS"), 2))
+vardf
+      
 vardf_header <- construct_header(
    # the data.frame or matrix that should be plotted  
    vardf,
@@ -959,16 +968,20 @@ vardf_header <- construct_header(
    # the alignment of each group, can be a single character (lcr) or a vector
    align = "c"
 )           
-print(xtable(vardf), add.to.row = vardf_header, include.rownames = F, hline.after = F)  
 
+print(xtable(vardf), add.to.row = vardf_header, include.rownames = F, hline.after = F, latex.environments=NULL,booktabs=TRUE)
 
 #bias and sd for informative sampling (NML, PL, WPL)
-dfis<- matrix(c(apply(Fitis_NML, 2,  mean),apply(Fitis_NML, 2, sd) , apply(Fitis_PL, 2, mean),apply(Fitis_PL, 2, sd),
-                      diag(apply(sqrtGis_PL, 1:2,  mean)),
-                      apply(Fitis_WPL, 2, mean),apply(Fitis_WPL, 2, sd),diag(apply(sqrtGis_WPL, 1:2,  mean))),  ncol=8 )
-dfis<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), dfis)
-colnames(dfis)<-c("parameter", c("bias", "sd"), rep(c("bias", "sd", "G^{-\frac{1}{2}}"), 2))
-dfis           
+dfis<- matrix(c(apply(Fitis_NML, 2,  mean), apply(Fitis_NML, 2, sd), apply(Fitis_PL, 2, mean), apply(Fitis_PL, 2, sd),
+apply(sqrt_diagGis_PL, 2, mean),  apply(Fitis_WPL, 2, mean), apply(Fitis_WPL, 2, sd),
+apply(sqrt_diagGis_WPL, 2, mean)),ncol=8)
+
+
+df[, c(1,3, 5, 6, 8)]=df[, c(1, 3, 5, 6, 8 )]*100
+dfis=round(dfis, 2)
+dfis<-cbind(c("beta_0", "beta_1", "sigma^2", "tau^2"), dfis)
+colnames(dfis)<-c("parameter", c("bias*100", "sd"), rep(c("bias*100", "sd", "esd*100"), 2))
+dfis
 dfis_header <- construct_header(
    # the data.frame or matrix that should be plotted  
    dfis,
@@ -979,13 +992,14 @@ dfis_header <- construct_header(
    # the alignment of each group, can be a single character (lcr) or a vector
    align = "c"
 )           
-print(xtable(dfis), add.to.row = dfis_header, floating=TRUE,  include.rownames = F, hline.after = F)  
+print(xtable(dfis), add.to.row = dfis_header, include.rownames = F,  hline.after = F, latex.environments=NULL,booktabs=TRUE)
 
 #variance estimator for informative sampling (PL, WPL)          
-vardfis<-matrix(round(c( apply(PSis_PL, 2, mean),apply(PSis_PL, 2, sd), diag(apply(sqrtJis_PL, 1:2, mean)),  
-                   apply(PSis_WPL, 2, mean),apply(PSis_WPL, 2, sd), diag(apply(sqrtJis_WPL, 1:2, mean)) ),2), ncol=6 )
+vardfis<-matrix(c( apply(PSis_PL, 2, mean),apply(PSis_PL, 2, sd),  apply(sqrt_diagJis_PL, 2, mean) ,
+apply(PSis_WPL, 2, mean),apply(PSis_WPL, 2, sd),  apply(sqrt_diagJis_WPL, 2, mean)),ncol=6)
+vardfis<-round(vardfis,2)
 vardfis<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), vardfis)
-colnames(vardfis)<-c("parameter", rep(c("mean of PS", "sd of PS", "J^{\frac{1}{2}}"), 2))
+colnames(vardfis)<-c("parameter", rep(c("mean of PS", "sd of PS", "esd of PS"), 2))
 vardfis   
 vardfis_header <- construct_header(
    # the data.frame or matrix that should be plotted  
@@ -997,66 +1011,8 @@ vardfis_header <- construct_header(
    # the alignment of each group, can be a single character (lcr) or a vector
    align = "c"
 )           
-print(xtable(vardfis), add.to.row = vardfis_header, include.rownames = F, hline.after = F)  
 
-xtable.decimal <- function(x, 
-                           cols=which(lapply(x, class) == 'numeric'), 
-                           colAlignment, 
-                           tocharFun=prettyNum,
-                           ...) {
-   splitCol <- function(x, ...) {
-      s <- strsplit(tocharFun(x, ...), split='.', fixed=TRUE)
-      right <- sapply(s, FUN=function(x) { ifelse(length(x) == 2, x[2], '0') })
-      left <- sapply(s, FUN=function(x) { x[1] })
-      data.frame(left=left, right=right, stringsAsFactors=FALSE)
-   }
-   
-   cols <- cols[order(cols, decreasing=TRUE)]
-   colnames <- names(x)
-   for(i in cols) {
-      if(i == 1) {
-         tmp <- cbind(splitCol(x[,1], ...), x[,2:ncol(x)])
-         names(tmp)[1:2] <- paste(names(tmp)[1], c('left','right'), sep='.')
-         names(tmp)[3:ncol(x)] <- names(x)[2:ncol(x)]
-         x <- tmp
-      } else if(i == ncol(x)) {
-         tmp <- cbind(x[,1:(ncol(x)-1)], splitCol(x[,ncol(x)], ...))
-         names(tmp)[1:(ncol(tmp)-2)] <- names(x)[1:(ncol(x)-1)]
-         names(tmp)[(ncol(tmp)-1):ncol(tmp)] <- paste(names(x)[ncol(x)], 
-                                                      c('left','right'), sep='.')
-         x <- tmp
-      } else {
-         tmp <- cbind(x[,1:(i-1)], splitCol(x[,i], ...), x[,(i+1):ncol(x)])
-         names(tmp)[1:(i-1)] <- names(x)[1:(i-1)]
-         names(tmp)[i:(i+1)] <- paste(names(x)[i], c('left','right'), sep='.')
-         names(tmp)[(i+2):ncol(tmp)] <- names(x)[(i+1):ncol(x)]
-         x <- tmp
-      }
-   }
-   
-   colnames[cols] <- paste('\\multicolumn{2}{c}{', colnames[cols], '}', sep='')
-   colnames <- paste(colnames, collapse=' & ')
-   
-   addtorow <- list()
-   addtorow$pos <- list()
-   addtorow$pos[[1]] <- c(0)
-   addtorow$command <- paste( colnames, ' \\\\ ', sep='')
-   
-   align <- rep('l', ncol(x))
-   if(!missing(colAlignment)) {
-      for(i in seq_along(colAlignment)) {
-         align[names(x) == names(colAlignment)[i]] <- colAlignment[i]
-      }
-   }
-   align[grep('.left$', names(x), perl=TRUE)] <- 'r@{.}'
-   align <- c('l', align) #Add an alignment for row names
-   
-   xtab <- xtable(x, align=align, ...)
-   print(xtab, add.to.row=addtorow, include.rownames=FALSE, include.colnames=FALSE, ...)
-}
-
-
-
+print(xtable(vardfis), add.to.row = vardfis_header, include.rownames = F, hline.after = F, latex.environments=NULL,booktabs=TRUE)
 
 
             
