@@ -1,7 +1,7 @@
 
 #setting: notation
-N1=30 ## number of strata 
-N2=20 ##number of elements in each strata (population level)
+N1=50 ## number of strata 
+N2=15 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
@@ -503,21 +503,21 @@ estH_WPL=-jacobian(function(theta){with(StrSRSWORSample,
 
 estH_WPL
 ##uniformative sampling
-wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,
-                pos=StrSRSWORSampleis$ID_unit, sc=StrSRSWORSampleis$strata, 
-                n2infor=n2is,N2=length(unique(population$lat)) ){
-   n<-length(y)
-   ij=expand.grid(1:n,1:n)
-   ij<-ij[ij[,1]<ij[,2],]
-   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   i<-ij[,1]
-   j<-ij[,2]
-   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                 sigma2=exp(theta[3]),tau2=exp(theta[4]),pos[i], pos[j],  sc[i], sc[j], n2infor,N2)
-   sum(increment)/T
-}
-estHis_WPL=hessian(wplis, estimatoris_WPL[[1]])
-estHis_WPL
+#wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,
+#                pos=StrSRSWORSampleis$ID_unit, sc=StrSRSWORSampleis$strata, 
+#                n2infor=n2is,N2=length(unique(population$lat)) ){
+#   n<-length(y)
+#   ij=expand.grid(1:n,1:n)
+#   ij<-ij[ij[,1]<ij[,2],]
+#   ij<-ij[g[ij[,1]]==g[ij[,2]],]
+#   i<-ij[,1]
+#   j<-ij[,2]
+#   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
+#                 sigma2=exp(theta[3]),tau2=exp(theta[4]),pos[i], pos[j],  sc[i], sc[j], n2infor,N2)
+#   sum(increment)/T
+#}
+#estHis_WPL=hessian(wplis, estimatoris_WPL[[1]])
+#estHis_WPL
 
 
 estHis_WPL=-jacobian(function(theta){with(StrSRSWORSampleis,
@@ -809,7 +809,7 @@ for(i in 1:LOTS){
    #H_WPL[,,i]=hessian(wpl, rc[[1]])
    
    H_WPL[,,i]=-jacobian(function(theta){with(StrSRSWORSample,
-                                              pairscoreis_PL(y,cluster,x,theta))}, x=rc[[1]],method="simple")
+                                              pairscore_PL(y,cluster,x,theta))}, x=rc[[1]],method="simple")
    
    #Calculate  variance matrix J  for WPL (meat for uniformative sampling design)
    J_WPL[, , i]=fast_J_WPL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
