@@ -1,7 +1,7 @@
 
 #setting: notation
-N1=1000 ## number of strata 
-N2=1000 ##number of elements in each strata (population level)
+N1=30 ## number of strata 
+N2=20 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
@@ -12,7 +12,7 @@ overlap=ceiling(N2*4/5)
 model_cluster<-function(population, overlap){
    population$cluster<-numeric(nrow(population))
    
-   id<-ifelse(population$latx<=overlap,
+   id<-ifelse(population$lat<=overlap,
               population$long, 
               ((population$long+population$lat-overlap) %% N1)+1
    )
@@ -83,7 +83,7 @@ summary(population$y)
 summary(StrSRSWORSample$y)
 summary(StrSRSWORSampleis$y)
 
-truevalue
+
 # Estimation: full-likelihood
 #install.packages("lme4")
 library(lme4)
@@ -378,18 +378,22 @@ library("numDeriv")
 
 #uninformative 
 #Calculate Hessian matrix H for PL (bread for uninformative sampling design)
-pl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x){
-   n<-length(y)
-   ij=expand.grid(1:n,1:n)
-   ij<-ij[ij[,1]<ij[,2],]
-   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   i<-ij[,1]
-   j<-ij[,2]
-   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                sigma2=exp(theta[3]),tau2=exp(theta[4]))
-   sum(increment)/T
-}
-estH_PL=hessian(pl, estimator_PL[[1]])
+#pl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x){
+#   n<-length(y)
+#   ij=expand.grid(1:n,1:n)
+#   ij<-ij[ij[,1]<ij[,2],]
+#   ij<-ij[g[ij[,1]]==g[ij[,2]],]
+#   i<-ij[,1]
+#   j<-ij[,2]
+#   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
+#                sigma2=exp(theta[3]),tau2=exp(theta[4]))
+#   sum(increment)/T
+#}
+#estH_PL=hessian(pl, estimator_PL[[1]])
+
+estH_PL=-jacobian(function(theta){with(StrSRSWORSample,
+                  pairscore_PL(y,cluster,x,theta))}, x=estimator_PL[[1]],method="simple")
+
 
 #Calculate  variance matrix J  for PL (meat for uninformative sampling design)
 fast_J_PL<-function(y,g,x,pos, sc,  n2infor,N2, theta){
@@ -449,18 +453,22 @@ sanestimator_PL= solve(estH_PL)%*% estJ_PL%*% solve(t(estH_PL))
 
 #Informative
 #Calculate Hessian matrix H for PL (bread for informative sampling design)
-plis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x){
-   n<-length(y)
-   ij=expand.grid(1:n,1:n)
-   ij<-ij[ij[,1]<ij[,2],]
-   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   i<-ij[,1]
-   j<-ij[,2]
-   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                sigma2=exp(theta[3]),tau2=exp(theta[4]))
-   sum(increment)/T
-}
-estHis_PL=hessian(plis, estimatoris_PL[[1]])
+#plis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x){
+#   n<-length(y)
+#   ij=expand.grid(1:n,1:n)
+#   ij<-ij[ij[,1]<ij[,2],]
+#   ij<-ij[g[ij[,1]]==g[ij[,2]],]
+#   i<-ij[,1]
+#   j<-ij[,2]
+#   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
+#                sigma2=exp(theta[3]),tau2=exp(theta[4]))
+#   sum(increment)/T
+#}
+#estHis_PL=hessian(plis, estimatoris_PL[[1]])
+
+
+estHis_PL=-jacobian(function(theta){with(StrSRSWORSampleis,
+               pairscore_PL(y,cluster,x,theta))}, x=estimatoris_PL[[1]],method="simple")
 
 #Calculate  variance matrix J  for PL (meat for informative sampling design)
 estJis_PL=fast_J_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,x=StrSRSWORSampleis$x,pos=StrSRSWORSampleis$ID_unit,  
@@ -474,23 +482,26 @@ sanestimatoris_PL = solve(estHis_PL)%*% estJis_PL%*% t(solve(estHis_PL))
 #define weighted pairwise likelihood pl 
 
 ##uniformative sampling
-wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x,
-              pos=StrSRSWORSample$ID_unit, sc=StrSRSWORSample$strata, 
-              n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
-   n<-length(y)
-   ij=expand.grid(1:n,1:n)
-   ij<-ij[ij[,1]<ij[,2],]
-   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   i<-ij[,1]
-   j<-ij[,2]
-   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                 sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
-   sum(increment)/T
-}
-estH_WPL=hessian(wpl, estimator_WPL[[1]])
+#wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x,
+#              pos=StrSRSWORSample$ID_unit, sc=StrSRSWORSample$strata, 
+#              n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
+#   n<-length(y)
+#   ij=expand.grid(1:n,1:n)
+#   ij<-ij[ij[,1]<ij[,2],]
+#   ij<-ij[g[ij[,1]]==g[ij[,2]],]
+#   i<-ij[,1]
+#   j<-ij[,2]
+#   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
+#                 sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
+#   sum(increment)/T
+#}
+#estH_WPL=hessian(wpl, estimator_WPL[[1]])
+#estH_WPL
+
+estH_WPL=-jacobian(function(theta){with(StrSRSWORSample,
+                                         pairscore_WPL(y,cluster,x,theta, ID_unit, strata,rep(n2, N1), N2 ))}, x=estimator_WPL[[1]],method="simple")
+
 estH_WPL
-
-
 ##uniformative sampling
 wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,
                 pos=StrSRSWORSampleis$ID_unit, sc=StrSRSWORSampleis$strata, 
@@ -508,6 +519,11 @@ wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=Str
 estHis_WPL=hessian(wplis, estimatoris_WPL[[1]])
 estHis_WPL
 
+
+estHis_WPL=-jacobian(function(theta){with(StrSRSWORSampleis,
+                                        pairscore_WPL(y,cluster,x,theta, ID_unit, strata,n2is, N2 ))}, x=estimatoris_WPL[[1]],method="simple")
+
+estHis_WPL
 
 ##define \hat{J}(\theta) as in page 97 of my thesis and  evaluate at the WPLE
 fast_J_WPL<-function(y,g,x,  pos,  sc, n2infor,N2, theta){
@@ -628,9 +644,6 @@ J_WPL<-array(0, c(4,4, LOTS))
 
 #Variance matrix J for WPL for informative sampling
 Jis_WPL<-array(0, c(4,4, LOTS))
-
-
-
 
 #Sanwich variance estimator for PL for uninformative sampling
 G_PL<-array(0, c(4,4, LOTS))
@@ -836,11 +849,17 @@ for(i in 1:LOTS){
 }	
 
 
+# install.packages("RColorBrewer")
+library(RColorBrewer)
+color<-c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c")
+
 #boxplot for uninformative sampling (NML, PL and WPL)
-color=c( rep(c("green", "blue", "red", "yellow"), 4))
+color=c( rep(color, 2))
 name=c("alpha_NML", "beta_NML", "sigma^2_NML", "tau^2_NML", "alpha_PL", "beta_PL", "sigma^2_PL", "tau^2_PL", "alpha_WPL", "beta_WPL", "sigma^2_WPL", "tau^2_WPL" )
 boxplot(cbind(Fit_NML[,c(1:4)],Fit_PL[,c(1:4)], Fit_WPL[,c(1:4)]) ,   col=color)
 abline(h=0)
+
+
 
 #boxplot for informative sampling (NML,PL and WPL)
 boxplot(cbind(Fitis_NML[,c(1:4)],Fitis_PL[,c(1:4)], Fitis_WPL[,c(1:4)]) ,   col=color)
