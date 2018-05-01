@@ -727,18 +727,25 @@ for(i in 1:LOTS){
    
    
    #Calculate Hessian matrix H for PL (bread for uninformative sampling design)
-   pl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
-      n<-length(y)
-      ij=expand.grid(1:n,1:n)
-      ij<-ij[ij[,1]<ij[,2],]
-      ij<-ij[g[ij[,1]]==g[ij[,2]],]
-      i<-ij[,1]
-      j<-ij[,2]
-      increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                    sigma2=exp(theta[3]),tau2=exp(theta[4]))
-      sum(increment)/T
-   }
-   H_PL[,,i]=hessian(pl, rb[[1]])
+   #pl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
+   #   n<-length(y)
+   #   ij=expand.grid(1:n,1:n)
+   #   ij<-ij[ij[,1]<ij[,2],]
+   #   ij<-ij[g[ij[,1]]==g[ij[,2]],]
+   #   i<-ij[,1]
+   #   j<-ij[,2]
+   #   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
+   #                 sigma2=exp(theta[3]),tau2=exp(theta[4]))
+   #   sum(increment)/T
+   #}
+   #H_PL[,,i]=hessian(pl, rb[[1]])
+   
+   
+   H_PL[,,i]=-jacobian(function(theta){with(StrSRSWORSample,
+                                          pairscore_PL(y,cluster,x,theta))}, x=rb[[1]],method="simple")
+  
+   
+   
    
    #Calculate  variance matrix J  for PL (meat for uniformative sampling design)
    J_PL[, , i]=fast_J_PL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
@@ -756,19 +763,22 @@ for(i in 1:LOTS){
    
    
    #Calculate Hessian matrix H for PL (bread for informative sampling design)
-   pl=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,
-                n2infor=n2is, N2=length(unique(population$lat)) ){
-      n<-length(y)
-      ij=expand.grid(1:n,1:n)
-      ij<-ij[ij[,1]<ij[,2],]
-      ij<-ij[g[ij[,1]]==g[ij[,2]],]
-      i<-ij[,1]
-      j<-ij[,2]
-      increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                   sigma2=exp(theta[3]),tau2=exp(theta[4]))
-      sum(increment)/T
-   }
-   His_PL[,,i]=hessian(pl, rbis[[1]])
+   #pl=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,
+   #             n2infor=n2is, N2=length(unique(population$lat)) ){
+   #   n<-length(y)
+   #   ij=expand.grid(1:n,1:n)
+   #   ij<-ij[ij[,1]<ij[,2],]
+   #   ij<-ij[g[ij[,1]]==g[ij[,2]],]
+   #   i<-ij[,1]
+   #   j<-ij[,2]
+   #   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
+   #                sigma2=exp(theta[3]),tau2=exp(theta[4]))
+   #   sum(increment)/T
+   #}
+   #His_PL[,,i]=hessian(pl, rbis[[1]])
+   
+   His_PL[,,i]=-jacobian(function(theta){with(StrSRSWORSampleis,
+                                            pairscore_PL(y,cluster,x,theta))}, x=rb[[1]],method="simple")
    
    #Calculate  variance matrix J  for PL (meat for informative sampling design)
    Jis_PL[, , i]=fast_J_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
@@ -784,19 +794,22 @@ for(i in 1:LOTS){
                                x=StrSRSWORSampleis$x,theta=c(truevalue[1:2], log(truevalue[3:4])))
    
    #Calculate Hessian matrix H for WPL (bread for uninformative sampling design)
-   wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, pos=StrSRSWORSample$ID_unit, 
-                 sc=StrSRSWORSample$strata, n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
-      n<-length(y)
-      ij=expand.grid(1:n,1:n)
-      ij<-ij[ij[,1]<ij[,2],]
-      ij<-ij[g[ij[,1]]==g[ij[,2]],]
-      i<-ij[,1]
-      j<-ij[,2]
-      increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                    sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
-      sum(increment)/T
-   }
-   H_WPL[,,i]=hessian(wpl, rc[[1]])
+   #wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, pos=StrSRSWORSample$ID_unit, 
+   #              sc=StrSRSWORSample$strata, n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
+   #   n<-length(y)
+   #   ij=expand.grid(1:n,1:n)
+   #   ij<-ij[ij[,1]<ij[,2],]
+   #   ij<-ij[g[ij[,1]]==g[ij[,2]],]
+   #   i<-ij[,1]
+   #   j<-ij[,2]
+   #   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
+   #                 sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
+   #   sum(increment)/T
+   #}
+   #H_WPL[,,i]=hessian(wpl, rc[[1]])
+   
+   H_WPL[,,i]=-jacobian(function(theta){with(StrSRSWORSample,
+                                              pairscoreis_PL(y,cluster,x,theta))}, x=rc[[1]],method="simple")
    
    #Calculate  variance matrix J  for WPL (meat for uniformative sampling design)
    J_WPL[, , i]=fast_J_WPL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
@@ -815,19 +828,23 @@ for(i in 1:LOTS){
  
 
    #Calculate Hessian matrix H  for WPL (bread for informative sampling design)
-   wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, pos=StrSRSWORSampleis$ID_unit, 
-                 sc=StrSRSWORSampleis$strata, n2infor=n2is, N2=length(unique(population$lat)) ){
-      n<-length(y)
-      ij=expand.grid(1:n,1:n)
-      ij<-ij[ij[,1]<ij[,2],]
-      ij<-ij[g[ij[,1]]==g[ij[,2]],]
-      i<-ij[,1]
-      j<-ij[,2]
-      increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                    sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
-      sum(increment)/T
-   }
-   His_WPL[, , i]=hessian(wplis, rcis[[1]])
+   #wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, pos=StrSRSWORSampleis$ID_unit, 
+   #              sc=StrSRSWORSampleis$strata, n2infor=n2is, N2=length(unique(population$lat)) ){
+   #   n<-length(y)
+   #   ij=expand.grid(1:n,1:n)
+   #   ij<-ij[ij[,1]<ij[,2],]
+   #   ij<-ij[g[ij[,1]]==g[ij[,2]],]
+   #   i<-ij[,1]
+   #   j<-ij[,2]
+   #   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
+   #                 sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
+   #   sum(increment)/T
+   #}
+   #His_WPL[, , i]=hessian(wplis, rcis[[1]])
+   
+   His_WPL[,,i]=-jacobian(function(theta){with(StrSRSWORSampleis,
+                                              pairscore_PL(y,cluster,x,theta))}, x=rc[[1]],method="simple")
+   
    
    #Calculate Variance matrix J  for WPL (meat for  informative sampling design)
    Jis_WPL[, , i]=fast_J_WPL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
