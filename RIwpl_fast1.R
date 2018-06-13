@@ -1,6 +1,6 @@
 #setting: notation
-N1=30 ## number of strata 
-N2=30 ##number of elements in each strata (population level)
+N1=100 ## number of strata
+N2=100 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
@@ -272,29 +272,6 @@ wl2<-function(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2, pos1, pos2,sc1, sc
    1/SecOrdPi(pos1, pos2,sc1, sc2, n2infor, N2)*(l2(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2))
 }	
 
-
-#wdalpha<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2, pos1, pos2,sc1, sc2, n2infor,N2){
-#   1/SecOrdPi(pos1, pos2,sc1, sc2, n2infor,N2)*
-#      (dalpha(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2))
-#}	
-
-#wdbeta<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2, pos1, pos2,sc1, sc2, n2infor,N2){
-#   1/SecOrdPi(pos1, pos2,sc1, sc2, n2infor, N2)*
-#      (dbeta(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2))
-#}	
-
-
-#wdsigma2<-function(y1,y2, g1,g2, x1,x2,alpha, beta, sigma2,tau2, pos1, pos2,sc1, sc2, n2infor,N2){
-#   1/SecOrdPi(pos1, pos2,sc1, sc2, n2infor,N2)*
-#      (dsigma2(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2))
-#}	
-
-#wdtau2<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2, pos1, pos2,sc1, sc2, n2infor,N2) {
-#   1/SecOrdPi(pos1, pos2,sc1, sc2, n2infor,N2)*
-#      (dtau2(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2))
-#}
-
-
 #optimization (WPL)
 fit_WPL<-function(y,g,x, pos, sc, n2infor, N2,  pars){
    n<-length(y)
@@ -377,19 +354,6 @@ library("numDeriv")
 
 #uninformative 
 #Calculate Hessian matrix H for PL (bread for uninformative sampling design)
-#pl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x){
-#   n<-length(y)
-#   ij=expand.grid(1:n,1:n)
-#   ij<-ij[ij[,1]<ij[,2],]
-#   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-#   i<-ij[,1]
-#   j<-ij[,2]
-#   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-#                sigma2=exp(theta[3]),tau2=exp(theta[4]))
-#   sum(increment)/T
-#}
-#estH_PL=hessian(pl, estimator_PL[[1]])
-
 estH_PL=-jacobian(function(theta){with(StrSRSWORSample, pairscore_PL(y,cluster,x,theta))}, x=estimator_PL[[1]],method="simple")
 
 
@@ -449,20 +413,6 @@ sanestimator_PL= solve(estH_PL)%*% estJ_PL%*% solve(t(estH_PL))
 
 #Informative
 #Calculate Hessian matrix H for PL (bread for informative sampling design)
-#plis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x){
-#   n<-length(y)
-#   ij=expand.grid(1:n,1:n)
-#   ij<-ij[ij[,1]<ij[,2],]
-#   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-#   i<-ij[,1]
-#   j<-ij[,2]
-#   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-#                sigma2=exp(theta[3]),tau2=exp(theta[4]))
-#   sum(increment)/T
-#}
-#estHis_PL=hessian(plis, estimatoris_PL[[1]])
-
-
 estHis_PL=-jacobian(function(theta){with(StrSRSWORSampleis, pairscore_PL(y,cluster,x,theta))}, x=estimatoris_PL[[1]],method="simple")
 
 #Calculate  variance matrix J  for PL (meat for informative sampling design)
@@ -475,45 +425,11 @@ sanestimatoris_PL = solve(estHis_PL)%*% estJis_PL%*% t(solve(estHis_PL))
 #variance estimation for WPL under stratified SRSWORS
 ##define H as in page 96 of my thesis as \hat{H}(\est)
 #define weighted pairwise likelihood pl 
-
 ##uniformative sampling
-#wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x,
-#              pos=StrSRSWORSample$ID_unit, sc=StrSRSWORSample$strata, 
-#              n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
-#   n<-length(y)
-#   ij=expand.grid(1:n,1:n)
-#   ij<-ij[ij[,1]<ij[,2],]
-#   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-#   i<-ij[,1]
-#   j<-ij[,2]
-#   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-#                 sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
-#   sum(increment)/T
-#}
-#estH_WPL=hessian(wpl, estimator_WPL[[1]])
-#estH_WPL
-
 estH_WPL=-jacobian(function(theta){with(StrSRSWORSample, pairscore_WPL(y,cluster,x,theta, ID_unit, strata,rep(n2, N1), N2 ))}, x=estimator_WPL[[1]],method="simple")
 estH_WPL
 
 ##uniformative sampling
-#wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,
-#                pos=StrSRSWORSampleis$ID_unit, sc=StrSRSWORSampleis$strata, 
-#                n2infor=n2is,N2=length(unique(population$lat)) ){
-#   n<-length(y)
-#   ij=expand.grid(1:n,1:n)
-#   ij<-ij[ij[,1]<ij[,2],]
-#   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-#   i<-ij[,1]
-#   j<-ij[,2]
-#   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-#                 sigma2=exp(theta[3]),tau2=exp(theta[4]),pos[i], pos[j],  sc[i], sc[j], n2infor,N2)
-#   sum(increment)/T
-#}
-#estHis_WPL=hessian(wplis, estimatoris_WPL[[1]])
-#estHis_WPL
-
-
 estHis_WPL=-jacobian(function(theta){with(StrSRSWORSampleis, pairscore_WPL(y,cluster,x,theta, ID_unit, strata,n2is, N2 ))}, x=estimatoris_WPL[[1]],method="simple")
 estHis_WPL
 
@@ -536,7 +452,7 @@ fast_J_WPL<-function(y,g,x,  pos,  sc, n2infor,N2, theta){
          cat(".")
          wij<-1/SecOrdPi(pos[i], pos[j],sc[i], sc[j],  n2infor,N2)
          incrementdaij= wij*dalpha(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],sigma2=theta[3],
-                                   tau2=theta[4])
+                         tau2=theta[4])
          incrementdbij=wij*dbeta(y[i],y[j],g[i],g[j],x[i],x[j],alpha=theta[1],beta=theta[2],sigma2=theta[3],
                                  tau2=theta[4])
          incrementdsij=wij*dsigma2(y[i],y[j],g[i],g[j],x[i],x[j],alpha=theta[1],beta=theta[2],sigma2=theta[3],
@@ -661,6 +577,22 @@ PS_WPL<-matrix(0,nrow=LOTS,ncol=4)
 #Pairwise score function for WPL for  informative sampling
 PSis_WPL<-matrix(0,nrow=LOTS,ncol=4)
 
+
+
+
+#define the squre root of J
+sqrt_diagJ_PL=matrix(0, nrow=LOTS, ncol=4)
+sqrt_diagJis_PL=matrix(0, nrow=LOTS, ncol=4)
+sqrt_diagJ_WPL=matrix(0, nrow=LOTS, ncol=4)
+sqrt_diagJis_WPL=matrix(0, nrow=LOTS, ncol=4)
+
+#define the squre root of G
+sqrt_diagG_PL=matrix(0, nrow=LOTS, ncol=4)
+sqrt_diagGis_PL=matrix(0, nrow=LOTS, ncol=4)
+sqrt_diagG_WPL=matrix(0, nrow=LOTS, ncol=4)
+sqrt_diagGis_WPL=matrix(0, nrow=LOTS, ncol=4)
+   
+
 ##Estimation: NML, PL and WPL 
 for(i in 1:LOTS){
    cat(i)
@@ -681,7 +613,7 @@ for(i in 1:LOTS){
    
    #NML, PL and WPL (uninformative sampling)
    ra<-lmer(y~(1|cluster)+x,data=StrSRSWORSample)
-   rb<-fit_PL(StrSRSWORSample$y,StrSRSWORSample$cluster, StrSRSWORSample$x,pars=truevalue )
+   rb<-fit_PL(StrSRSWORSample$y,StrSRSWORSample$cluster, StrSRSWORSample$x,pars=truevalue)
    rc<-fit_WPL(StrSRSWORSample$y,StrSRSWORSample$cluster,StrSRSWORSample$x, StrSRSWORSample$ID_unit, 
                StrSRSWORSample$strata, n2infor=rep(n2, N1), N2, pars=truevalue )
    
@@ -716,20 +648,6 @@ for(i in 1:LOTS){
    Fitis_WPL[i,1:4]<-rcis$par[1:4]-truevalue[1:4]
 
    #Calculate Hessian matrix H for PL (bread for uninformative sampling design)
-   #pl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
-   #   n<-length(y)
-   #   ij=expand.grid(1:n,1:n)
-   #   ij<-ij[ij[,1]<ij[,2],]
-   #   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   #   i<-ij[,1]
-   #   j<-ij[,2]
-   #   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-   #                 sigma2=exp(theta[3]),tau2=exp(theta[4]))
-   #   sum(increment)/T
-   #}
-   #H_PL[,,i]=hessian(pl, rb[[1]])
-   
-   
    H_PL[,,i]=-jacobian(function(theta){with(StrSRSWORSample, pairscore_PL(y,cluster,x,theta))}, x=rb[[1]],method="simple")
    
    #Calculate  variance matrix J  for PL (meat for uniformative sampling design)
@@ -743,20 +661,6 @@ for(i in 1:LOTS){
    PS_PL[i, ]<- pairscore_PL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,x=StrSRSWORSample$x,theta=rb[[1]])
    
    #Calculate Hessian matrix H for PL (bread for informative sampling design)
-   #pl=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,
-   #             n2infor=n2is, N2=length(unique(population$lat)) ){
-   #   n<-length(y)
-   #   ij=expand.grid(1:n,1:n)
-   #   ij<-ij[ij[,1]<ij[,2],]
-   #   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   #   i<-ij[,1]
-   #   j<-ij[,2]
-   #   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-   #                sigma2=exp(theta[3]),tau2=exp(theta[4]))
-   #   sum(increment)/T
-   #}
-   #His_PL[,,i]=hessian(pl, rbis[[1]])
-   
    His_PL[,,i]=-jacobian(function(theta){with(StrSRSWORSampleis, pairscore_PL(y,cluster,x,theta))}, x=rbis[[1]],method="simple")
    
    #Calculate  variance matrix J  for PL (meat for informative sampling design)
@@ -772,20 +676,6 @@ for(i in 1:LOTS){
                                x=StrSRSWORSampleis$x,theta=rbis[[1]])
    
    #Calculate Hessian matrix H for WPL (bread for uninformative sampling design)
-   #wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, pos=StrSRSWORSample$ID_unit, 
-   #              sc=StrSRSWORSample$strata, n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
-   #   n<-length(y)
-   #   ij=expand.grid(1:n,1:n)
-   #   ij<-ij[ij[,1]<ij[,2],]
-   #   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   #   i<-ij[,1]
-   #   j<-ij[,2]
-   #   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-   #                 sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
-   #   sum(increment)/T
-   #}
-   #H_WPL[,,i]=hessian(wpl, rc[[1]])
-   
    H_WPL[,,i]=-jacobian(function(theta){with(StrSRSWORSample, pairscore_WPL(y,cluster,x,theta,ID_unit,strata,rep(n2, N1), N2   ))}, x=rc[[1]],method="simple")
    
    #Calculate  variance matrix J  for WPL (meat for uniformative sampling design)
@@ -804,20 +694,6 @@ for(i in 1:LOTS){
    
 
    #Calculate Hessian matrix H  for WPL (bread for informative sampling design)
-   #wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, pos=StrSRSWORSampleis$ID_unit, 
-   #              sc=StrSRSWORSampleis$strata, n2infor=n2is, N2=length(unique(population$lat)) ){
-   #   n<-length(y)
-   #   ij=expand.grid(1:n,1:n)
-   #   ij<-ij[ij[,1]<ij[,2],]
-   #   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   #   i<-ij[,1]
-   #   j<-ij[,2]
-   #   increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-   #                 sigma2=exp(theta[3]),tau2=exp(theta[4]), pos[i], pos[j], sc[i], sc[j], n2infor,N2)
-   #   sum(increment)/T
-   #}
-   #His_WPL[, , i]=hessian(wplis, rcis[[1]])
-   
    His_WPL[,,i]=-jacobian(function(theta){with(StrSRSWORSampleis,
                                                pairscore_WPL(y,cluster,x,theta,ID_unit, strata, n2is, N2  ))}, x=rcis[[1]],method="simple")
    
@@ -838,6 +714,20 @@ for(i in 1:LOTS){
    PSis_WPL[i, ]<- pairscore_WPL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
                                  x=StrSRSWORSampleis$x,theta=rcis[[1]],
                                  pos=StrSRSWORSampleis$ID_unit, StrSRSWORSampleis$strata, n2infor=n2is,N2)
+   
+   
+   
+   sqrt_diagJ_PL[i,]= sqrt(diag(J_PL[,,i]))
+   sqrt_diagJis_PL[i,]= sqrt(diag(Jis_PL[,,i]))
+   sqrt_diagJ_WPL[i,]= sqrt(diag(J_WPL[,,i]))
+   sqrt_diagJis_WPL[i,]= sqrt(diag(Jis_WPL[,,i]))
+   
+   
+   sqrt_diagG_PL[i,]= sqrt(diag(G_PL[,,i]))
+   sqrt_diagGis_PL[i,]= sqrt(diag(Gis_PL[,,i]))
+   sqrt_diagG_WPL[i,]= sqrt(diag(G_WPL[,,i]))
+   sqrt_diagGis_WPL[i,]= sqrt(diag(Gis_WPL[,,i]))
+   
    
 }	
 
@@ -894,54 +784,13 @@ construct_header <- function(df, grp_names, span, align = "c", draw_line = T) {
 
 
 
-#define the squre root of J
-sqrt_diagJ_PL=matrix(0, nrow=LOTS, ncol=4)
-for ( i in 1:LOTS){
-   sqrt_diagJ_PL[i,]= sqrt(diag(J_PL[,,i]))
-}
-
-sqrt_diagJis_PL=matrix(0, nrow=LOTS, ncol=4)
-for ( i in 1:LOTS){
-   sqrt_diagJis_PL[i,]= sqrt(diag(Jis_PL[,,i]))
-}
-
-sqrt_diagJ_WPL=matrix(0, nrow=LOTS, ncol=4)
-for ( i in 1:LOTS){
-   sqrt_diagJ_WPL[i,]= sqrt(diag(J_WPL[,,i]))
-}
-
-sqrt_diagJis_WPL=matrix(0, nrow=LOTS, ncol=4)
-for ( i in 1:LOTS){
-   sqrt_diagJis_WPL[i,]= sqrt(diag(Jis_WPL[,,i]))
-}
-
-#define the squre root of G
-sqrt_diagG_PL=matrix(0, nrow=LOTS, ncol=4)
-for ( i in 1:LOTS){
-   sqrt_diagG_PL[i,]= sqrt(diag(G_PL[,,i]))
-}
-
-sqrt_diagGis_PL=matrix(0, nrow=LOTS, ncol=4)
-for ( i in 1:LOTS){
-   sqrt_diagGis_PL[i,]= sqrt(diag(Gis_PL[,,i]))
-}
-
-sqrt_diagG_WPL=matrix(0, nrow=LOTS, ncol=4)
-for ( i in 1:LOTS){
-   sqrt_diagG_WPL[i,]= sqrt(diag(G_WPL[,,i]))
-}
-
-sqrt_diagGis_WPL=matrix(0, nrow=LOTS, ncol=4)
-for ( i in 1:LOTS){
-   sqrt_diagGis_PL[i,]= sqrt(diag(Gis_WPL[,,i]))
-}
 
 
 
 #bias,  sd (empirical standard deviation)  and estimated sd (G) for uninformative sampling (NML, PL, WPL)
-df<- matrix(c(apply(Fit_NML, 2,  mean), apply(Fit_NML, 2, sd), apply(Fit_PL, 2, mean), apply(Fit_PL, 2, sd),
-              apply(sqrt_diagG_PL, 2, mean),  apply(Fit_WPL, 2, mean), apply(Fit_WPL, 2, sd),
-              apply(sqrt_diagG_WPL, 2, mean)),ncol=8)
+df<- matrix(c(apply(Fit_NML, 2,  median), apply(Fit_NML, 2, mad), apply(Fit_PL, 2, median), apply(Fit_PL, 2, mad),
+              apply(sqrt_diagG_PL, 2, median),  apply(Fit_WPL, 2, median), apply(Fit_WPL, 2, mad),
+              apply(sqrt_diagG_WPL, 2, median)),ncol=8)
 df[, c(1,3, 5, 6, 8)]=df[, c(1, 3, 5, 6, 8 )]*100
 df<-round(df, 2)
 df<-cbind(c("beta_0", "beta_1", "sigma^2", "tau^2"), df)
@@ -963,11 +812,10 @@ print(xtable(df), add.to.row = df_header, include.rownames = F,  hline.after = F
 
 
 #variance estimator (sd of PS and  J) for uninformative sampling (PL, WPL)          
-vardf<- matrix(c( apply(PS_PL, 2, mean),apply(PS_PL, 2, sd),  apply(sqrt_diagJ_PL, 2, mean) ,
-                  apply(PS_WPL, 2, mean),apply(PS_WPL, 2, sd),  apply(sqrt_diagJ_WPL, 2, mean)),ncol=6)
+vardf<- matrix(c( apply(PS_PL, 2, median),apply(PS_PL, 2, mad),  apply(sqrt_diagJ_PL, 2, median), apply(PS_WPL, 2, median),apply(PS_WPL, 2, mad),  apply(sqrt_diagJ_WPL, 2, median)),ncol=6)
 vardf<-round(vardf,2)
 vardf<-cbind(c("beta_0", "beta_1", "sigma^2", "tau^2"), vardf)
-colnames(vardf)<-c("parameter", rep(c("mean of PS", "sd of PS", "esd of PS"), 2))
+colnames(vardf)<-c("parameter", rep(c("mean of PS", "sd of WPS", "esd of WPS"), 2))
 vardf
 
 vardf_header <- construct_header(
@@ -984,9 +832,7 @@ vardf_header <- construct_header(
 print(xtable(vardf), add.to.row = vardf_header, include.rownames = F, hline.after = F, latex.environments=NULL,booktabs=TRUE)
 
 #bias and sd for informative sampling (NML, PL, WPL)
-dfis<- matrix(c(apply(Fitis_NML, 2,  mean), apply(Fitis_NML, 2, sd), apply(Fitis_PL, 2, mean), apply(Fitis_PL, 2, sd),
-                apply(sqrt_diagGis_PL, 2, mean),  apply(Fitis_WPL, 2, mean), apply(Fitis_WPL, 2, sd),
-                apply(sqrt_diagGis_WPL, 2, mean)),ncol=8)
+dfis<- matrix(c(apply(Fitis_NML, 2,  median), apply(Fitis_NML, 2, mad), apply(Fitis_PL, 2, median), apply(Fitis_PL, 2, mad), apply(sqrt_diagGis_PL, 2, median),  apply(Fitis_WPL, 2,median), apply(Fitis_WPL, 2, mad), apply(sqrt_diagGis_WPL, 2, median)),ncol=8)
 
 
 df[, c(1,3, 5, 6, 8)]=df[, c(1, 3, 5, 6, 8 )]*100
@@ -1007,8 +853,8 @@ dfis_header <- construct_header(
 print(xtable(dfis), add.to.row = dfis_header, include.rownames = F,  hline.after = F, latex.environments=NULL,booktabs=TRUE)
 
 #variance estimator for informative sampling (PL, WPL)          
-vardfis<-matrix(c( apply(PSis_PL, 2, mean),apply(PSis_PL, 2, sd),  apply(sqrt_diagJis_PL, 2, mean) ,
-                   apply(PSis_WPL, 2, mean),apply(PSis_WPL, 2, sd),  apply(sqrt_diagJis_WPL, 2, mean)),ncol=6)
+vardfis<-matrix(c( apply(PSis_PL, 2, median),apply(PSis_PL, 2, mad),  apply(sqrt_diagJis_PL, 2, median) ,
+                   apply(PSis_WPL, 2, median),apply(PSis_WPL, 2, mad),  apply(sqrt_diagJis_WPL, 2, median)),ncol=6)
 vardfis<-round(vardfis,2)
 vardfis<-cbind(c("alpha", "beta", "sigma^2", "tau^2"), vardfis)
 colnames(vardfis)<-c("parameter", rep(c("mean of PS", "sd of PS", "esd of PS"), 2))
