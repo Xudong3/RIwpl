@@ -909,9 +909,8 @@ for(i in 1:LOTS){
 }	
 
 
-# install.packages("RColorBrewer")
-library(RColorBrewer)
- color<-c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c")
+
+color<-c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c")
 
 s#boxplot for uninformative sampling (NML, PL and WPL)
 color=c( rep(color, 3))
@@ -919,18 +918,12 @@ name=c("alpha_NML", "beta_NML", "sigma^2_NML", "tau^2_NML", "alpha_PL", "beta_PL
 boxplot(cbind(Fit_NML[,c(1:4)],Fit_PL[,c(1:4)], Fit_WPL[,c(1:4)]) ,   col=color)
 abline(h=0)
 
-
-
 #boxplot for informative sampling (NML,PL and WPL)
 boxplot(cbind(Fitis_NML[,c(1:4)],Fitis_PL[,c(1:4)], Fitis_WPL[,c(1:4)]) , col=color)
 abline(h=0)
 
 
 #create a table for latex
-#install.packages("xtable")
-library(xtable)
-
-
 construct_header <- function(df, grp_names, span, align = "c", draw_line = T) {
    if (length(align) == 1) align <- rep(align, length(grp_names))
    if (!all.equal(length(grp_names), length(span), length(align)))
