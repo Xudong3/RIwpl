@@ -1,7 +1,7 @@
 
 
-#install.packages(c("MASS", "sampling", rockchalk", "matrixcalc", "lme4","numDeriv", "RColorBrewer","xtable"))
-packages<-c("MASS","sampling", "rockchalk", "matrixcalc", "lme4", "numDeriv", "RColorBrewer","xtable" )
+#install.packages(c("sampling", rockchalk", "matrixcalc", "lme4","numDeriv", "RColorBrewer","xtable"))
+packages<-c("sampling", "rockchalk", "matrixcalc", "lme4", "numDeriv", "RColorBrewer","xtable" )
 lapply(packages, library,character.only = TRUE)
 dyn.load("RIFourOrdPi.so")
 
