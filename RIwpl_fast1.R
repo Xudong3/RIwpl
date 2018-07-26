@@ -1,5 +1,10 @@
 
 
+#install.packages(c("MASS", "sampling", rockchalk", "matrixcalc", "lme4","numDeriv", "RColorBrewer","xtable"))
+packages<-c("MASS","sampling", "rockchalk", "matrixcalc", "lme4", "numDeriv", "RColorBrewer","xtable" )
+lapply(packages, library,character.only = TRUE)
+dyn.load("RIFourOrdPi.so")
+
 #setting: notation
 N1=100 ## number of strata
 N2=100 ##number of elements in each strata (population level)
@@ -65,9 +70,6 @@ n2is
 
 
 # Using sampling package for stratify sampling (SRSWOR) 
-#install.packages("sampling")
-library("sampling")
-
 ##uninformative stratify sampling design (SRSWOR) and extracts the observed data
 s<-strata(data=population, stratanames="strata", size=rep(n2,N1), method="srswor",description=FALSE)
 StrSRSWORSample=getdata(population, s)
@@ -85,9 +87,6 @@ summary(StrSRSWORSampleis$y)
 
 
 #Estimation: full-likelihood
-#install.packages("lme4")
-library(lme4)
-
 ##Census full-liklihood estimator 
 lmer(y~(1|cluster)+x,data=population)
 
@@ -260,7 +259,6 @@ estimator_PL<- fit_PL(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWO
 estimator_PL[[1]]-truevalue
 ##uninformative sampling (without weight) at the estimated value
 pairscore_PL(StrSRSWORSample$y, StrSRSWORSample$cluster, StrSRSWORSample$x,estimator_PL[[1]])
-
 ##uninformative sampling (without weight) at the truevalue
 pairscore_PL(StrSRSWORSample$y, StrSRSWORSample$cluster, StrSRSWORSample$x,truevalue)
 
@@ -298,11 +296,10 @@ estimatoris_PL[[1]]-truevalue
 
 ##informative sampling (without weight) at the estimated value
 pairscore_PL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster, StrSRSWORSampleis$x,estimatoris_PL[[1]])
-
 ##uninformative sampling (without weight) at the truevalue
 pairscore_PL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster, StrSRSWORSampleis$x,truevalue)
 
-dyn.load("RIFourOrdPi.so")
+
 
 C2<-function(pos1, pos2,sc1, sc2,n2infor,N2){
    .C("SecOrdPi",as.integer(pos1), as.integer(pos2),as.integer(sc1), as.integer(sc2),as.double(n2infor),as.integer(N2),length(pos1),rval=numeric(length(pos1)))$rval
@@ -404,11 +401,9 @@ estimator_WPL<- fit_WPL(StrSRSWORSample$y, StrSRSWORSample$cluster,StrSRSWORSamp
                         StrSRSWORSample$strata,n2infor=rep(n2,N1), N2,  pars=truevalue)
 estimator_WPL[[1]]-truevalue
 
-
 ##uninformative sampling (with weight) at the estimated value
 pairscore_WPL(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, theta=estimator_WPL[[1]],
               pos=StrSRSWORSample$ID_unit, StrSRSWORSample$strata, n2infor=rep(n2, N1),N2)
-
 ##uninformative sampling (with weight) at the true value
 pairscore_WPL(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, theta=truevalue,
               pos=StrSRSWORSample$ID_unit, StrSRSWORSample$strata, n2infor=rep(n2, N1),N2)
@@ -442,29 +437,21 @@ fitis_WPL<-function(y,g,x, pos, sc, n2infor, N2,  pars){
    optim(pars,func1,gr,  method="L-BFGS-B", lower=c(-Inf, -Inf, 0.1, 0),
          control=list(fnscale=-1,parscale=c(1/n^0.8,1/n^0.8,1/n^0.8,1/n^0.8)))
 }
+
 ###informative sampling (with weight)
 estimatoris_WPL<- fitis_WPL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster,StrSRSWORSampleis$x, StrSRSWORSampleis$ID_unit, 
                           StrSRSWORSampleis$strata,n2infor=n2is, N2,  pars=truevalue)
 estimatoris_WPL[[1]]-truevalue
-
 ##informative sampling (with weight) at the estimator 
 pairscore_WPL(y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, theta=estimatoris_WPL[[1]],
               pos=StrSRSWORSampleis$ID_unit, StrSRSWORSampleis$strata, n2infor=n2is,N2 )
-
 ##informative sampling (with weight) at the true value
 pairscore_WPL(y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, theta=truevalue,
               pos=StrSRSWORSampleis$ID_unit, StrSRSWORSampleis$strata, n2infor=n2is,N2)
 
 #variance estimation for PL under stratified SRSWORS
 #define the pairwise likelihood (without weight)
-
-#install.packages("numDeriv")
-library("numDeriv")
-
-
 #Calculate Hessian matrix H for PL for the population data
-H_PL=-jacobian(function(theta){with(population, pairscore_PL(y,cluster,x,theta))}, x=truevalue,method="complex")
-
 estH_PL=-jacobian(function(theta){with(StrSRSWORSample, pairscore_PL(y,cluster,x,theta))}, x=estimator_PL[[1]],method="complex")
 
 
@@ -517,16 +504,13 @@ fast_J_PL<-function(y,g,x,pos, sc,  n2infor,N2, theta){
    ##attr(rval, "pairs")<-keep ##debug
    rval
 }
+
 #estimated J at the estimator value
 estJ_PL=fast_J_PL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,x=StrSRSWORSample$x,pos=StrSRSWORSample$ID_unit,  
                   sc=StrSRSWORSample$strata,n2infor=rep(n2, N1), N2, theta=estimator_PL[[1]] )
-
-#estimated J at the truevalue
-estJ_PL_true=fast_J_PL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,x=StrSRSWORSample$x,pos=StrSRSWORSample$ID_unit,  
-                  sc=StrSRSWORSample$strata,n2infor=rep(n2, N1), N2, theta=truevalue )
-
 #sanwich estimator (uninformative sampling )
 sanestimator_PL= solve(estH_PL)%*% estJ_PL%*% solve(t(estH_PL))
+
 
 #Informative
 #Calculate Hessian matrix H for PL (bread for informative sampling design) at the estimated value
@@ -535,13 +519,9 @@ estHis_PL=-jacobian(function(theta){with(StrSRSWORSampleis, pairscore_PL(y,clust
 #Calculate  variance matrix J  for PL (meat for informative sampling design) at the estimated value
 estJis_PL=fast_J_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,x=StrSRSWORSampleis$x,pos=StrSRSWORSampleis$ID_unit,  
                     sc=StrSRSWORSampleis$strata,   n2infor=n2is, N2, theta=estimatoris_PL[[1]] )
-
-#Calculate  variance matrix J  for PL (meat for informative sampling design) at the truevalue
-estJis_PL_true=fast_J_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,x=StrSRSWORSampleis$x,pos=StrSRSWORSampleis$ID_unit,  
-                    sc=StrSRSWORSampleis$strata,   n2infor=n2is, N2, theta=truevalue )
-
 #sanwich estimator (informative sampling )
 sanestimatoris_PL = solve(estHis_PL)%*% estJis_PL%*% t(solve(estHis_PL))
+
 
 #variance estimation for WPL under stratified SRSWORS
 ##define H as in page 96 of my thesis as \hat{H}(\est)
@@ -550,8 +530,6 @@ sanestimatoris_PL = solve(estHis_PL)%*% estJis_PL%*% t(solve(estHis_PL))
 ##uniformative sampling
 estH_WPL=-jacobian(function(theta){with(StrSRSWORSample, pairscore_WPL(y,cluster,x,theta, ID_unit, strata,rep(n2, N1), N2 ))}, x=estimator_WPL[[1]],method="complex")
 estH_WPL
-
-
 
 ##define \hat{J}(\theta) as in page 97 of my thesis and  evaluate at the WPLE
 fast_J_WPL<-function(y,g,x,  pos,  sc, n2infor,N2, theta){
@@ -611,14 +589,8 @@ estJ_WPL=fast_J_WPL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster, x=StrSRSWORSa
                     n2infor=rep(n2, N1), N2, theta=estimator_WPL[[1]] )
 estJ_WPL
 
-##uninformative  sampling at the true value
-estJ_WPL_true=fast_J_WPL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, pos=StrSRSWORSample$ID_unit,  sc=StrSRSWORSample$strata, 
-                    n2infor=rep(n2, N1), N2, theta=truevalue)
-estJ_WPL_true
 
 ###check positive definite 
-#install.packages("matrixcalc")
-#library("matrixcalc")
 #is.positive.definite(estJ_WPL)
 
 
@@ -626,8 +598,6 @@ estJ_WPL_true
 estJis_WPL=fast_J_WPL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, pos=StrSRSWORSampleis$ID_unit,  sc=StrSRSWORSampleis$strata, n2infor=n2is, N2,theta=estimatoris_WPL[[1]] )
 estJis_WPL
 
-estJis_WPL_true=fast_J_WPL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, pos=StrSRSWORSampleis$ID_unit,  sc=StrSRSWORSampleis$strata, n2infor=n2is, N2,theta=truevalue )
-estJis_WPL_true
 ###check positive definite 
 #is.positive.definite(estJis_WPL)
 
@@ -988,11 +958,6 @@ construct_header <- function(df, grp_names, span, align = "c", draw_line = T) {
                     command = c("\\hline\n  ", header, "\\hline\n  "))
    return(addtorow)
 }
-
-
-
-
-
 
 
 #bias,  sd (empirical standard deviation)  and estimated sd (G) for uninformative sampling (NML, PL, WPL)
